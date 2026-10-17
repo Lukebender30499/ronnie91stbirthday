@@ -16,8 +16,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Homemade+Apple&family=Nunito:wght@400;600;700&display=swap">
 <style>
-  /* Layout: a corkboard wall. The greeting card sits in the center column and opens on its own;
-     family photos are pinned as polaroids in the two side columns, and fall below the card on phones. */
+  /* Layout: a picture frame. Small polaroids run along all four edges of the screen and the
+     greeting card sits in the middle, opening on its own. On phones the frame becomes a strip
+     above the card and a grid below it. */
   :root {
     --desk: #1b2a47;
     --desk-deep: #111a2f;
@@ -35,42 +36,58 @@
     --body: 'Nunito', system-ui, -apple-system, sans-serif;
     --w: 380px;
     --h: 500px;
+    --photo: 150px;
+    --strip: 190px;
     color-scheme: dark;
   }
 
   html, body { height: 100%; }
   body {
     margin: 0;
-    background: radial-gradient(ellipse at 50% 15%, var(--desk) 0%, var(--desk-deep) 70%);
+    background: radial-gradient(ellipse at 50% 40%, var(--desk) 0%, var(--desk-deep) 70%);
     color: var(--fg);
     font-family: var(--body);
-    padding-block: 26px 40px;
+    padding-block: 16px 20px;
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
     overflow-x: hidden;
     box-sizing: border-box;
   }
 
-  .wall {
+  .frame {
     display: grid;
-    grid-template-columns: minmax(200px, 1fr) minmax(0, 790px) minmax(200px, 1fr);
-    gap: 28px;
-    align-items: center;
-    max-width: 1500px;
+    grid-template-columns: var(--strip) minmax(0, 1fr) var(--strip);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "top    top    top"
+      "left   center right"
+      "bottom bottom bottom";
+    gap: 10px;
+    min-height: calc(100vh - 36px);
+    max-width: 1600px;
     margin: 0 auto;
   }
+  .strip { display: flex; justify-content: space-evenly; align-items: center; gap: 14px; min-width: 0; }
+  .strip.top { grid-area: top; }
+  .strip.bottom { grid-area: bottom; }
+  .strip.left { grid-area: left; flex-direction: column; }
+  .strip.right { grid-area: right; flex-direction: column; }
+
   .center {
+    grid-area: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    gap: 14px;
     min-width: 0;
+    padding: 8px 12px;
   }
 
   .headline {
     font-family: var(--hand);
     color: var(--gold);
-    font-size: clamp(26px, 3.4vw, 40px);
+    font-size: clamp(24px, 3vw, 36px);
     line-height: 1.3;
     margin: 0;
     text-align: center;
@@ -78,7 +95,7 @@
     transform: rotate(-1.2deg);
   }
   .eyebrow {
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--fg-dim);
@@ -86,41 +103,37 @@
     text-align: center;
   }
 
-  /* Side collages */
-  .side {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px 14px;
-    align-content: center;
-    grid-auto-flow: dense;
-    min-width: 0;
-  }
+  /* Polaroids */
   .pola {
     --r: 0deg;
     position: relative;
+    width: var(--photo);
+    max-width: 100%;
+    flex: 0 0 auto;
+    margin: 0;
     background: var(--paper);
-    padding: 8px 8px 22px;
-    box-shadow: 0 14px 30px -14px rgba(0,0,0,.85), 0 0 0 1px rgba(0,0,0,.08);
+    padding: 7px 7px 18px;
+    box-sizing: border-box;
+    box-shadow: 0 12px 26px -12px rgba(0,0,0,.85), 0 0 0 1px rgba(0,0,0,.08);
     transform: rotate(var(--r));
     transition: transform .35s ease, box-shadow .35s ease;
     animation: drift 9s ease-in-out infinite alternate;
     animation-delay: var(--d, 0s);
   }
-  .pola.wide { grid-column: span 2; }
-  .pola img { display: block; width: 100%; height: auto; }
+  .pola img { display: block; width: 100%; height: auto; aspect-ratio: var(--ar, 4 / 3); object-fit: cover; }
   .pola::before {
     content: "";
     position: absolute;
-    top: -9px;
+    top: -8px;
     left: 50%;
-    width: 64px;
-    height: 18px;
+    width: 54px;
+    height: 16px;
     background: var(--tape);
     transform: translateX(-50%) rotate(calc(var(--r) * -1.5));
     box-shadow: 0 1px 2px rgba(0,0,0,.15);
   }
-  .pola:hover { transform: rotate(0deg) scale(1.04); box-shadow: 0 22px 40px -16px rgba(0,0,0,.9); z-index: 3; animation-play-state: paused; }
-  @keyframes drift { from { translate: 0 0; } to { translate: 0 -5px; } }
+  .pola:hover { transform: rotate(0deg) scale(1.08); box-shadow: 0 22px 40px -16px rgba(0,0,0,.9); z-index: 3; animation-play-state: paused; }
+  @keyframes drift { from { translate: 0 0; } to { translate: 0 -4px; } }
 
   /* The stage reserves space for the card at its scaled size; JS sets --s. */
   .stage {
@@ -297,7 +310,7 @@
     transform: rotate(-2deg);
   }
 
-  .controls { display: flex; gap: 10px; }
+  .controls { display: flex; gap: 10px; align-items: center; }
   button {
     font: 600 13px/1 var(--body);
     letter-spacing: .04em;
@@ -310,14 +323,7 @@
   }
   button:hover { border-color: var(--gold); color: var(--gold); }
   button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-
-  .foot {
-    margin: 36px auto 0;
-    text-align: center;
-    font-size: 12px;
-    letter-spacing: .08em;
-    color: var(--fg-dim);
-  }
+  .foot { font-size: 11px; letter-spacing: .08em; color: var(--fg-dim); margin: 0; }
 
   canvas#confetti {
     position: fixed;
@@ -328,15 +334,19 @@
     z-index: 10;
   }
 
-  @media (max-width: 1120px) {
-    .wall { grid-template-columns: 1fr; gap: 36px; }
-    .center { order: 0; }
-    .side { order: 1; grid-template-columns: repeat(3, 1fr); max-width: 760px; margin: 0 auto; width: 100%; }
-    .pola.wide { grid-column: span 1; }
-  }
-  @media (max-width: 560px) {
-    .side { grid-template-columns: 1fr 1fr; gap: 20px 14px; }
-    .pola { padding: 6px 6px 18px; }
+  @media (max-width: 1240px) { :root { --photo: 130px; --strip: 165px; } }
+  @media (max-width: 900px) {
+    :root { --photo: 110px; }
+    .frame {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      grid-template-areas: "top" "center" "left" "right" "bottom";
+      gap: 22px;
+      min-height: 0;
+    }
+    .strip { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 18px 14px; }
+    .strip.left, .strip.right { flex-direction: row; }
+    .strip.top { padding-top: 10px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -346,13 +356,16 @@
   }
 </style>
 
-<div class="wall">
-  <div class="side" aria-label="Family photos">
-    <figure class="pola" style="--r:-3deg; --d:-1s; margin:0"><img src="photos/p2.jpg" alt="Ronnie standing beside Grammy, who is seated in an armchair at home" loading="lazy"></figure>
-    <figure class="pola" style="--r:2.5deg; --d:-4s; margin:0"><img src="photos/p5.jpg" alt="Ronnie and Grammy in a swimming pool with a blue float" loading="lazy"></figure>
-    <figure class="pola wide" style="--r:-1.5deg; --d:-2s; margin:0"><img src="photos/p8.jpg" alt="Old studio family portrait with three young kids in matching striped sweaters" loading="lazy"></figure>
-    <figure class="pola" style="--r:3deg; --d:-6s; margin:0"><img src="photos/p3.jpg" alt="Family photo at Epcot in matching Disney shirts" loading="lazy"></figure>
-    <figure class="pola" style="--r:-2deg; --d:-3s; margin:0"><img src="photos/p7.jpg" alt="Three brothers piled on a couch, laughing" loading="lazy"></figure>
+<div class="frame">
+  <div class="strip top" aria-label="Family photos">
+    <figure class="pola" style="--r:-3deg; --d:-1s"><img src="photos/p1.jpg" alt="The whole family at a long restaurant table" loading="lazy"></figure>
+    <figure class="pola" style="--r:2deg; --d:-4s"><img src="photos/p4.jpg" alt="Family gathered around a patio table by the water at night" loading="lazy"></figure>
+    <figure class="pola" style="--r:-1.5deg; --d:-2.5s"><img src="photos/p6.jpg" alt="Parents and three sons in suits at the wedding" loading="lazy"></figure>
+  </div>
+
+  <div class="strip left" aria-label="Family photos">
+    <figure class="pola" style="--r:2.5deg; --d:-3s; --ar: 3 / 4"><img src="photos/p2.jpg" alt="Ronnie standing beside Grammy, who is seated in an armchair at home" loading="lazy"></figure>
+    <figure class="pola" style="--r:-2deg; --d:-5s"><img src="photos/p5.jpg" alt="Ronnie and Grammy in a swimming pool with a blue float" loading="lazy"></figure>
   </div>
 
   <div class="center">
@@ -400,17 +413,19 @@
     <div class="controls">
       <button type="button" id="replay">Open again</button>
     </div>
+    <p class="foot">ronnie91stbirthday.com</p>
   </div>
 
-  <div class="side" aria-label="More family photos">
-    <figure class="pola" style="--r:2deg; --d:-5s; margin:0"><img src="photos/p1.jpg" alt="The whole family at a long restaurant table" loading="lazy"></figure>
-    <figure class="pola" style="--r:-2.5deg; --d:-1.5s; margin:0"><img src="photos/p4.jpg" alt="Family gathered around a patio table by the water at night" loading="lazy"></figure>
-    <figure class="pola wide" style="--r:1.5deg; --d:-3.5s; margin:0"><img src="photos/p9.jpg" alt="Ronnie and Grammy seated in front of the family at the wedding" loading="lazy"></figure>
-    <figure class="pola" style="--r:-3deg; --d:-2.5s; margin:0"><img src="photos/p6.jpg" alt="Parents and three sons in suits at the wedding" loading="lazy"></figure>
+  <div class="strip right" aria-label="Family photos">
+    <figure class="pola" style="--r:-2.5deg; --d:-1.5s; --ar: 3 / 4"><img src="photos/p7.jpg" alt="Three brothers piled on a couch, laughing" loading="lazy"></figure>
+    <figure class="pola" style="--r:3deg; --d:-6s"><img src="photos/p3.jpg" alt="Family photo at Epcot in matching Disney shirts" loading="lazy"></figure>
+  </div>
+
+  <div class="strip bottom" aria-label="Family photos">
+    <figure class="pola" style="--r:2deg; --d:-3.5s"><img src="photos/p8.jpg" alt="Old studio family portrait with three young kids in matching striped sweaters" loading="lazy"></figure>
+    <figure class="pola" style="--r:-2.5deg; --d:-2s"><img src="photos/p9.jpg" alt="Ronnie and Grammy seated in front of the family at the wedding" loading="lazy"></figure>
   </div>
 </div>
-
-<p class="foot">ronnie91stbirthday.com</p>
 
 <canvas id="confetti" aria-hidden="true"></canvas>
 
@@ -427,8 +442,8 @@
   var seed = 91;
   function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
 
-  // Split the note into letters so it can be written out one by one, each with its own small tilt,
-  // baseline wobble and ink weight. Spaces stay as plain text so lines still wrap naturally.
+  // Split the note into words and letters so it can be written out one letter at a time,
+  // each with its own small tilt, baseline wobble and ink weight. Words never break mid-word.
   (function wrapChars() {
     var walker = document.createTreeWalker(note, NodeFilter.SHOW_TEXT, null);
     var nodes = [];
@@ -459,11 +474,16 @@
     });
   })();
 
-  // Scale the fixed-size card to fit whatever width the center column has.
+  // Scale the fixed-size card to fit the center column.
   function fit() {
     var center = stage.parentElement;
-    var avail = Math.min(center.clientWidth, document.documentElement.clientWidth - 32);
+    var avail = Math.min(center.clientWidth - 24, document.documentElement.clientWidth - 32);
     var s = Math.min(1, avail / (W * 2 + 8));
+    // On wide screens also shrink to fit the height, so the photo frame needs no scrolling.
+    if (document.documentElement.clientWidth > 900) {
+      var sh = (window.innerHeight - 470) / 500;
+      s = Math.min(s, Math.max(0.6, sh));
+    }
     stage.style.setProperty('--s', s.toFixed(3));
   }
   fit();
