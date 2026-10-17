@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A birthday card for Ronnie from Luke.">
+<meta property="og:title" content="Happy 91st, Ronnie!">
+<meta property="og:description" content="A birthday card for Ronnie from Luke.">
+<meta property="og:image" content="cover.png">
+<style>img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Ronnie's 91st Birthday</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Homemade+Apple&family=Nunito:wght@400;600;700&display=swap">
+<style>
+  /* Layout: a corkboard wall. The greeting card sits in the center column and opens on its own;
+     family photos are pinned as polaroids in the two side columns, and fall below the card on phones. */
+  :root {
+    --desk: #1b2a47;
+    --desk-deep: #111a2f;
+    --card: #fbf8f0;
+    --card-edge: #e6dfcd;
+    --paper: #fdfcf8;
+    --rule: rgba(31, 58, 147, 0.11);
+    --ink: #1e3680;
+    --ink-soft: #52639a;
+    --gold: #e4b85e;
+    --fg: #f3eee3;
+    --fg-dim: rgba(243, 238, 227, 0.62);
+    --tape: rgba(255, 244, 200, 0.55);
+    --hand: 'Homemade Apple', 'Bradley Hand', 'Segoe Print', cursive;
+    --body: 'Nunito', system-ui, -apple-system, sans-serif;
+    --w: 380px;
+    --h: 500px;
+    color-scheme: dark;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: radial-gradient(ellipse at 50% 15%, var(--desk) 0%, var(--desk-deep) 70%);
+    color: var(--fg);
+    font-family: var(--body);
+    padding-block: 26px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .wall {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 790px) minmax(200px, 1fr);
+    gap: 28px;
+    align-items: center;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .headline {
+    font-family: var(--hand);
+    color: var(--gold);
+    font-size: clamp(26px, 3.4vw, 40px);
+    line-height: 1.3;
+    margin: 0;
+    text-align: center;
+    text-wrap: balance;
+    transform: rotate(-1.2deg);
+  }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-dim);
+    margin: 0;
+    text-align: center;
+  }
+
+  /* Side collages */
+  .side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 14px;
+    align-content: center;
+    grid-auto-flow: dense;
+    min-width: 0;
+  }
+  .pola {
+    --r: 0deg;
+    position: relative;
+    background: var(--paper);
+    padding: 8px 8px 22px;
+    box-shadow: 0 14px 30px -14px rgba(0,0,0,.85), 0 0 0 1px rgba(0,0,0,.08);
+    transform: rotate(var(--r));
+    transition: transform .35s ease, box-shadow .35s ease;
+    animation: drift 9s ease-in-out infinite alternate;
+    animation-delay: var(--d, 0s);
+  }
+  .pola.wide { grid-column: span 2; }
+  .pola img { display: block; width: 100%; height: auto; }
+  .pola::before {
+    content: "";
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    width: 64px;
+    height: 18px;
+    background: var(--tape);
+    transform: translateX(-50%) rotate(calc(var(--r) * -1.5));
+    box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  }
+  .pola:hover { transform: rotate(0deg) scale(1.04); box-shadow: 0 22px 40px -16px rgba(0,0,0,.9); z-index: 3; animation-play-state: paused; }
+  @keyframes drift { from { translate: 0 0; } to { translate: 0 -5px; } }
+
+  /* The stage reserves space for the card at its scaled size; JS sets --s. */
+  .stage {
+    --s: 1;
+    width: calc(var(--w) * 2 * var(--s));
+    height: calc(var(--h) * var(--s));
+    max-width: 100%;
+    position: relative;
+    transition: width 1.1s cubic-bezier(.6, 0, .25, 1);
+  }
+  .stage.closed { width: calc(var(--w) * var(--s)); }
+
+  .scene {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: calc(var(--w) * 2);
+    height: var(--h);
+    perspective: 1900px;
+    transform-origin: top center;
+    transform: translateX(-50%) scale(var(--s));
+  }
+  .card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform: translateX(0);
+    transition: transform 1.1s cubic-bezier(.6, 0, .25, 1);
+  }
+  .closed .card { transform: translateX(calc(var(--w) * -0.5)); }
+
+  .page {
+    position: absolute;
+    top: 0;
+    width: var(--w);
+    height: var(--h);
+    background: var(--card);
+    box-sizing: border-box;
+  }
+  .page.right {
+    left: var(--w);
+    border-radius: 0 10px 10px 0;
+    box-shadow: inset 14px 0 24px -18px rgba(0,0,0,.25), 0 24px 50px -20px rgba(0,0,0,.7);
+    padding: 36px 28px 30px 30px;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 30px, var(--rule) 30px 31px);
+    background-position: 0 63px;
+  }
+  .closed .page.right { box-shadow: inset 14px 0 24px -18px rgba(0,0,0,.25); }
+
+  .cover {
+    position: absolute;
+    top: 0;
+    left: var(--w);
+    width: var(--w);
+    height: var(--h);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition: transform 1.3s cubic-bezier(.65, 0, .2, 1);
+    cursor: pointer;
+    z-index: 2;
+  }
+  .open .cover { transform: rotateY(-176deg); }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-sizing: border-box;
+  }
+  .face.front {
+    background: var(--card);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 16px 12px;
+    box-shadow: 0 30px 60px -22px rgba(0,0,0,.8), 0 0 0 1px var(--card-edge);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .face.front img {
+    display: block;
+    width: 100%;
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 6px 14px -6px rgba(0,0,0,.45);
+  }
+  .front .caption {
+    font-family: var(--hand);
+    color: var(--ink);
+    font-size: 24px;
+    line-height: 1.6;
+    text-align: center;
+    margin: 0;
+    transform: rotate(-1deg);
+  }
+  .front .hint {
+    position: absolute;
+    right: 26px;
+    top: 26px;
+    font: 600 11px/1 var(--body);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: rgba(251, 248, 240, .92);
+    border-radius: 999px;
+    padding: 6px 10px;
+    animation: nudge 1.6s ease-in-out infinite;
+  }
+  .open .front .hint { display: none; }
+  @keyframes nudge { 50% { transform: translateX(-4px); } }
+
+  .face.back {
+    transform: rotateY(180deg);
+    background: var(--card);
+    border-radius: 10px 0 0 10px;
+    box-shadow: inset -14px 0 24px -18px rgba(0,0,0,.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 28px;
+  }
+
+  /* Inside-left doodle */
+  .doodle { width: 180px; max-width: 100%; height: auto; }
+  .doodle .ln { stroke: var(--ink); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .doodle .dot { fill: var(--gold); }
+  .doodle .flame { fill: var(--gold); transform-origin: center; transform-box: fill-box; animation: flicker 1.1s ease-in-out infinite alternate; }
+  .doodle .flame.b { animation-delay: .4s; }
+  .doodle .num { font-family: var(--hand); font-size: 30px; fill: var(--ink); }
+  @keyframes flicker { from { transform: scale(1) } to { transform: scale(1.14) translateY(-1px) } }
+  .back .big {
+    font-family: var(--hand);
+    color: var(--ink);
+    font-size: 34px;
+    line-height: 1.5;
+    margin: 0;
+    text-align: center;
+    text-wrap: balance;
+    transform: rotate(-1.5deg);
+  }
+
+  /* The handwritten note */
+  .note {
+    font-family: var(--hand);
+    color: var(--ink);
+    font-size: 16.5px;
+    line-height: 31px;
+    margin: 0;
+    transform: rotate(-0.6deg);
+    word-spacing: 1px;
+  }
+  .note p { margin: 0; }
+  .note .wd { display: inline-block; white-space: nowrap; }
+  .note .ch {
+    display: inline-block;
+    opacity: 0;
+    transition: opacity .1s ease;
+    transform: rotate(var(--tilt, 0deg)) translateY(var(--dy, 0px));
+  }
+  .note.written .ch { opacity: var(--ink-a, 1); }
+  .note .sign {
+    display: block;
+    text-align: right;
+    font-size: 22px;
+    margin-top: 10px;
+    padding-right: 6px;
+    transform: rotate(-2deg);
+  }
+
+  .controls { display: flex; gap: 10px; }
+  button {
+    font: 600 13px/1 var(--body);
+    letter-spacing: .04em;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid rgba(243, 238, 227, .35);
+    border-radius: 999px;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--gold); color: var(--gold); }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .foot {
+    margin: 36px auto 0;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--fg-dim);
+  }
+
+  canvas#confetti {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  @media (max-width: 1120px) {
+    .wall { grid-template-columns: 1fr; gap: 36px; }
+    .center { order: 0; }
+    .side { order: 1; grid-template-columns: repeat(3, 1fr); max-width: 760px; margin: 0 auto; width: 100%; }
+    .pola.wide { grid-column: span 1; }
+  }
+  @media (max-width: 560px) {
+    .side { grid-template-columns: 1fr 1fr; gap: 20px 14px; }
+    .pola { padding: 6px 6px 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage, .card, .cover, .pola { transition: none !important; animation: none !important; }
+    .front .hint, .doodle .flame { animation: none; }
+    .note .ch { transition: none; opacity: var(--ink-a, 1); }
+  }
+</style>
+
+<div class="wall">
+  <div class="side" aria-label="Family photos">
+    <figure class="pola" style="--r:-3deg; --d:-1s; margin:0"><img src="photos/p2.jpg" alt="Ronnie standing beside Grammy, who is seated in an armchair at home" loading="lazy"></figure>
+    <figure class="pola" style="--r:2.5deg; --d:-4s; margin:0"><img src="photos/p5.jpg" alt="Ronnie and Grammy in a swimming pool with a blue float" loading="lazy"></figure>
+    <figure class="pola wide" style="--r:-1.5deg; --d:-2s; margin:0"><img src="photos/p8.jpg" alt="Old studio family portrait with three young kids in matching striped sweaters" loading="lazy"></figure>
+    <figure class="pola" style="--r:3deg; --d:-6s; margin:0"><img src="photos/p3.jpg" alt="Family photo at Epcot in matching Disney shirts" loading="lazy"></figure>
+    <figure class="pola" style="--r:-2deg; --d:-3s; margin:0"><img src="photos/p7.jpg" alt="Three brothers piled on a couch, laughing" loading="lazy"></figure>
+  </div>
+
+  <div class="center">
+    <p class="eyebrow">Ronnie's 91st birthday</p>
+    <h1 class="headline">Happy 91st, Ronnie!</h1>
+
+    <div class="stage closed" id="stage">
+      <div class="scene">
+        <div class="card" id="card">
+          <div class="page right">
+            <div class="note" id="note">
+              <p>Happy Birthday Ronnie!</p>
+              <p>It was amazing to see you for Rosh Hashanah and soon for the wedding. It's always so great to see you and Grammy and spend time with the whole family, and really speaks to such an amazing family you've made. I love you and hope you have an amazing day.</p>
+              <span class="sign">- Luke</span>
+            </div>
+          </div>
+
+          <div class="cover" id="cover" role="button" tabindex="0" aria-label="Open the card">
+            <div class="face front">
+              <img src="cover.png" alt="Luke with family in front of a flag banner" width="316" height="414">
+              <p class="caption">For Ronnie</p>
+              <span class="hint">Tap to open</span>
+            </div>
+            <div class="face back" aria-hidden="true">
+              <svg class="doodle" viewBox="0 0 170 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hand-drawn birthday cake with two candles and the number 91">
+                <path class="ln" d="M28 96 C 26 120, 30 130, 34 138 L 136 138 C 140 130, 144 120, 142 96 Z"/>
+                <path class="ln" d="M28 96 C 40 88, 56 104, 70 94 C 84 84, 98 106, 112 94 C 126 84, 136 98, 142 96"/>
+                <path class="ln" d="M40 70 L 130 70 L 130 96"/><path class="ln" d="M40 70 L 40 96"/>
+                <path class="ln" d="M40 70 C 52 62, 66 78, 80 68 C 94 60, 108 76, 130 70"/>
+                <rect class="ln" x="66" y="36" width="9" height="34" rx="2"/>
+                <rect class="ln" x="95" y="36" width="9" height="34" rx="2"/>
+                <path class="ln" d="M70.5 36 L 70.5 29 M 99.5 36 L 99.5 29"/>
+                <ellipse class="flame" cx="70.5" cy="22" rx="5" ry="7.5"/>
+                <ellipse class="flame b" cx="99.5" cy="22" rx="5" ry="7.5"/>
+                <text class="num" x="85" y="128" text-anchor="middle">91</text>
+                <circle class="dot" cx="58" cy="82" r="2.4"/><circle class="dot" cx="98" cy="84" r="2.4"/><circle class="dot" cx="122" cy="88" r="2.4"/><circle class="dot" cx="48" cy="110" r="2.4"/><circle class="dot" cx="130" cy="112" r="2.4"/>
+              </svg>
+              <p class="big">Happy Birthday!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button type="button" id="replay">Open again</button>
+    </div>
+  </div>
+
+  <div class="side" aria-label="More family photos">
+    <figure class="pola" style="--r:2deg; --d:-5s; margin:0"><img src="photos/p1.jpg" alt="The whole family at a long restaurant table" loading="lazy"></figure>
+    <figure class="pola" style="--r:-2.5deg; --d:-1.5s; margin:0"><img src="photos/p4.jpg" alt="Family gathered around a patio table by the water at night" loading="lazy"></figure>
+    <figure class="pola wide" style="--r:1.5deg; --d:-3.5s; margin:0"><img src="photos/p9.jpg" alt="Ronnie and Grammy seated in front of the family at the wedding" loading="lazy"></figure>
+    <figure class="pola" style="--r:-3deg; --d:-2.5s; margin:0"><img src="photos/p6.jpg" alt="Parents and three sons in suits at the wedding" loading="lazy"></figure>
+  </div>
+</div>
+
+<p class="foot">ronnie91stbirthday.com</p>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  var stage = document.getElementById('stage');
+  var cover = document.getElementById('cover');
+  var note = document.getElementById('note');
+  var replay = document.getElementById('replay');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 380;
+
+  // Seeded pseudo-random so the "handwriting" wobble is the same on every visit.
+  var seed = 91;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+  // Split the note into letters so it can be written out one by one, each with its own small tilt,
+  // baseline wobble and ink weight. Spaces stay as plain text so lines still wrap naturally.
+  (function wrapChars() {
+    var walker = document.createTreeWalker(note, NodeFilter.SHOW_TEXT, null);
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    var i = 0;
+    nodes.forEach(function (tn) {
+      var frag = document.createDocumentFragment();
+      var words = tn.nodeValue.split(/(\s+)/);
+      words.forEach(function (word) {
+        if (!word) return;
+        if (/^\s+$/.test(word)) { frag.appendChild(document.createTextNode(' ')); return; }
+        var wd = document.createElement('span');
+        wd.className = 'wd';
+        for (var k = 0; k < word.length; k++) {
+          var s = document.createElement('span');
+          s.className = 'ch';
+          s.textContent = word[k];
+          s.style.setProperty('--tilt', ((rnd() - .5) * 4).toFixed(2) + 'deg');
+          s.style.setProperty('--dy', ((rnd() - .5) * 1.8).toFixed(2) + 'px');
+          s.style.setProperty('--ink-a', (0.78 + rnd() * 0.22).toFixed(2));
+          s.style.transitionDelay = (i * 0.02) + 's';
+          i++;
+          wd.appendChild(s);
+        }
+        frag.appendChild(wd);
+      });
+      tn.parentNode.replaceChild(frag, tn);
+    });
+  })();
+
+  // Scale the fixed-size card to fit whatever width the center column has.
+  function fit() {
+    var center = stage.parentElement;
+    var avail = Math.min(center.clientWidth, document.documentElement.clientWidth - 32);
+    var s = Math.min(1, avail / (W * 2 + 8));
+    stage.style.setProperty('--s', s.toFixed(3));
+  }
+  fit();
+  window.addEventListener('resize', fit);
+
+  var writeTimer = null;
+  function openCard() {
+    stage.classList.remove('closed');
+    stage.classList.add('open');
+    cover.setAttribute('aria-label', 'Close the card');
+    clearTimeout(writeTimer);
+    note.classList.remove('written');
+    void note.offsetWidth;
+    writeTimer = setTimeout(function () { note.classList.add('written'); }, reduce ? 0 : 900);
+    if (!reduce) setTimeout(burst, 650);
+  }
+  function closeCard() {
+    stage.classList.remove('open');
+    stage.classList.add('closed');
+    cover.setAttribute('aria-label', 'Open the card');
+    clearTimeout(writeTimer);
+    note.classList.remove('written');
+  }
+  function toggle() { stage.classList.contains('open') ? closeCard() : openCard(); }
+
+  cover.addEventListener('click', toggle);
+  cover.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+  replay.addEventListener('click', function () {
+    closeCard();
+    setTimeout(openCard, reduce ? 50 : 1200);
+  });
+
+  // Confetti
+  var canvas = document.getElementById('confetti');
+  var ctx = canvas.getContext('2d');
+  var pieces = [];
+  var raf = null;
+  var colors = ['#e4b85e', '#fbf8f0', '#5b7bd5', '#d9534f', '#8fd3b6'];
+  function sizeCanvas() {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function burst() {
+    sizeCanvas();
+    var r = stage.getBoundingClientRect();
+    var cx = r.left + r.width / 2;
+    var cy = Math.max(60, Math.min(window.innerHeight - 60, r.top + r.height * 0.45));
+    for (var i = 0; i < 180; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var sp = 6 + Math.random() * 9;
+      pieces.push({
+        x: cx, y: cy,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 6,
+        w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+        r: Math.random() * Math.PI, vr: (Math.random() - .5) * .3,
+        c: colors[i % colors.length], life: 0, max: 150 + Math.random() * 60
+      });
+    }
+    if (!raf) raf = requestAnimationFrame(step);
+  }
+  function step() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = pieces.length - 1; i >= 0; i--) {
+      var p = pieces[i];
+      p.life++;
+      p.vy += 0.22; p.vx *= 0.985; p.vy *= 0.985;
+      p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      var alpha = p.life > p.max - 40 ? Math.max(0, (p.max - p.life) / 40) : 1;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.r);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.life / 9)));
+      ctx.restore();
+      if (p.life > p.max || p.y > window.innerHeight + 40) pieces.splice(i, 1);
+    }
+    if (pieces.length) { raf = requestAnimationFrame(step); }
+    else { raf = null; ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); }
+  }
+
+  // Auto-open shortly after load so the card performs on its own.
+  setTimeout(openCard, reduce ? 100 : 1400);
+})();
+</script>
+</body>
+</html>
